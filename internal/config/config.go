@@ -1,4 +1,4 @@
-package Config
+package config
 
 import (
 	"log"
@@ -20,12 +20,12 @@ type HTTPServer struct {
 	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
 }
 
-func MustLoad() *Config {
-	configPath := os.Getenv("CONFIG_PATH")
-	if configPath == "" {
-		log.Fatal("CONFIG_PATH is not set")
-	}
 
+const (
+	configPath = "config/local.yaml"
+)
+
+func MustLoad() *Config {
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		log.Fatalf("config file does not exist: %s", configPath)
 	}

@@ -41,7 +41,6 @@ func New(storagePath string) (*Storage, error) {
 }
 
 
-//TODO: найти баг и исправить, соединение закрывается до коммита транзакции
 func (s *Storage) SaveUrl(urlToSave string, alias string) error {
 	const fn = "storage.sqlite.SaveUrl"
 
@@ -52,12 +51,11 @@ func (s *Storage) SaveUrl(urlToSave string, alias string) error {
 	}
 	
 	var existingURL string
-
 	err = tx.QueryRow("SELECT url FROM url WHERE alias=?", alias).Scan(&existingURL)
 
 	if err == nil{
 		tx.Rollback()
-		return fmt.Errorf("%s: %w", fn, storage.ErrURLExists)
+		return fmt.Errorf("%s", storage.ErrURLExists)
 	}
 
 	if err != sql.ErrNoRows {
@@ -65,13 +63,13 @@ func (s *Storage) SaveUrl(urlToSave string, alias string) error {
 		return fmt.Errorf("%s: %w", fn, err)
 	}
 
-	stmt, er := s.db.Prepare("INSERT INTO url(url, alias) VALUES(?, ?)")
-	if er != nil {
+
+	stmt, err := tx.Prepare("INSERT INTO url(url, alias) VALUES(?, ?)")
+	if err != nil {
 		tx.Rollback()
 		return fmt.Errorf("%s: %w", fn, err)
 	}
 
-	defer stmt.Close()
 
 	_, err = stmt.Exec(urlToSave, alias)
 	if err != nil {
@@ -79,9 +77,13 @@ func (s *Storage) SaveUrl(urlToSave string, alias string) error {
 		return fmt.Errorf("%s: %w", fn, err)
 	}
 
+
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("%s: %w", fn, err)
 	}
+
+	defer stmt.Close()
+
 
 	return nil
 }

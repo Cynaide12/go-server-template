@@ -38,7 +38,7 @@ func main() {
 	}
 	log.Debug("storage init succesful")
 
-	initRouter(log, storage)
+	initRouter(cfg, log, storage)
 }
 
 func setupLogger(env string) *slog.Logger {
@@ -59,7 +59,7 @@ func setupLogger(env string) *slog.Logger {
 
 }
 
-func initRouter(log *slog.Logger, urlSaver httphandlers.UrlSaver) {
+func initRouter(cfg *config.Config, log *slog.Logger, UrlHandler httphandlers.UrlHandler) {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -67,11 +67,31 @@ func initRouter(log *slog.Logger, urlSaver httphandlers.UrlSaver) {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.URLFormat)
 
-	r.Post("/url", func(w http.ResponseWriter, r *http.Request) {
-		httphandlers.NewURL(log, urlSaver)
-	})
+	r.Get("/{alias}", httphandlers.RedirectURLHandler(log, UrlHandler))
 
-	http.ListenAndServe(":8080", r)
+	r.Post("/new-url", httphandlers.SaveURLHandler(log, UrlHandler))
+	r.Post("/delete-url", httphandlers.DeleteURLHandler(log, UrlHandler))
+
+	r.Get("/get-url", httphandlers.GetURLHandler(log, UrlHandler))
+
+	srv := &http.Server{
+		Addr:         cfg.HTTPServer.Address,
+		Handler:      r,
+		ReadTimeout:  cfg.HTTPServer.Timeout,
+		WriteTimeout: cfg.HTTPServer.Timeout,
+		IdleTimeout:  cfg.HTTPServer.IdleTimeout,
+	}
+
+	log.Info("starting server", slog.String("address", srv.Addr))
+
+	if err := srv.ListenAndServe(); err != nil {
+		log.Error("failed to start server", sl.Err(err))
+
+		os.Exit(1)
+	}
+
+	log.Error("server stopped")
+
 }
 
 func setupPrettySlog() *slog.Logger {

@@ -55,7 +55,7 @@ func (s *Storage) SaveUrl(urlToSave string, alias string) error {
 
 	if err == nil{
 		tx.Rollback()
-		return fmt.Errorf("%s", storage.ErrURLExists)
+		return storage.ErrAliasExists
 	}
 
 	if err != sql.ErrNoRows {
@@ -101,7 +101,7 @@ func (s *Storage) GetUrl(alias string) (string, error) {
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return "", fmt.Errorf("%s: %w", fn, storage.ErrURLNotFound)
+			return "", storage.ErrURLNotFound
 		}
 		return "", fmt.Errorf("%s: %w", fn, err)
 	}
@@ -128,7 +128,7 @@ func (s *Storage) DeleteURL(alias string) error {
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("%s: %w", fn, storage.ErrURLNotFound)
+		return storage.ErrURLNotFound
 	}
 
 	return nil

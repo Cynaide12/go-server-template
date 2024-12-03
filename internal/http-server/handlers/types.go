@@ -2,6 +2,7 @@ package handlers
 
 import resp "url_shortener/internal/lib/api"
 
+//go:generate go run github.com/vektra/mockery/v2@v2.49.1 --name=UrlHandler
 type UrlHandler interface {
 	SaveUrl(urlToSave string, alias string) error
 	GetUrl(alias string) (string, error)

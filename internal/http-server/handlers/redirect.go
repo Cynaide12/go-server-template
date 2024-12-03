@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/render"
 )
 
+
 func RedirectURLHandler(log *slog.Logger, UrlHandler UrlHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -23,7 +24,7 @@ func RedirectURLHandler(log *slog.Logger, UrlHandler UrlHandler) http.HandlerFun
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
-		//TODO: сделать чтобы работало, не вытаскивает alias
+
 		alias := chi.URLParam(r, "alias")
 		if alias == "" {
 			log.Error("alias parameter required")

@@ -2,6 +2,7 @@ package random
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -39,12 +40,12 @@ func TestRandomString(t *testing.T) {
 
 	for _, tc := range testCases{
 		str1 := RandomString(tc.length)
+		time.Sleep(time.Microsecond * 1)
 		str2 := RandomString(tc.length)
-		
 
 		assert.Len(t, str1, tc.length)
 		assert.Len(t, str2, tc.length)
-		//TODO:почему то строки всегда одинаковые генерятся
+
 		assert.NotEqual(t, str1, str2)
 		
 	}

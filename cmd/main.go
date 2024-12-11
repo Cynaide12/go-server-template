@@ -4,12 +4,10 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"url_shortener/internal/config"
-	httphandlers "url_shortener/internal/http-server/handlers"
-	"url_shortener/internal/http-server/logger"
-	slogpretty "url_shortener/internal/lib/logger/handlers"
-	"url_shortener/internal/lib/logger/sl"
-	"url_shortener/internal/storage/sqlite"
+	"apm_server/internal/config"
+	"apm_server/internal/http-server/logger"
+	slogpretty "apm_server/internal/lib/logger/handlers"
+	"apm_server/internal/lib/logger/sl"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -30,15 +28,8 @@ func main() {
 
 	log.Debug("debug messages are enabled")
 
-	log.Debug("start init storage")
-	storage, err := sqlite.New(cfg.StoragePath)
-	if err != nil {
-		log.Error("failed to init storage", sl.Err(err))
-		os.Exit(1)
-	}
-	log.Debug("storage init succesful")
 
-	initRouter(cfg, log, storage)
+	initRouter(cfg, log)
 }
 
 func setupLogger(env string) *slog.Logger {
@@ -59,7 +50,7 @@ func setupLogger(env string) *slog.Logger {
 
 }
 
-func initRouter(cfg *config.Config, log *slog.Logger, UrlHandler httphandlers.UrlHandler) {
+func initRouter(cfg *config.Config, log *slog.Logger) {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -67,12 +58,6 @@ func initRouter(cfg *config.Config, log *slog.Logger, UrlHandler httphandlers.Ur
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.URLFormat)
 
-	r.Get("/{alias}", httphandlers.RedirectURLHandler(log, UrlHandler))
-
-	r.Post("/new-url", httphandlers.SaveURLHandler(log, UrlHandler))
-	r.Post("/delete-url", httphandlers.DeleteURLHandler(log, UrlHandler))
-
-	r.Get("/get-url", httphandlers.GetURLHandler(log, UrlHandler))
 
 	srv := &http.Server{
 		Addr:         cfg.HTTPServer.Address,

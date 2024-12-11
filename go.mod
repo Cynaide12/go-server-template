@@ -1,4 +1,4 @@
-module url_shortener
+module apm_server
 
 go 1.22.4
 
